@@ -1,0 +1,16 @@
+1
+data/
+log/
+DBS/
+BINDATA/
+*.exe
+*.db
+*.rar
+*.zip
+*.go2
+*.lock
+.idea/
+*.iml
+gopath.cmd
+*.out
+nodeId*

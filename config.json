@@ -1,0 +1,20 @@
+{
+    "data_column_separator_byte":1,
+    "fusion_separator_char":"|",
+    "header_column_separator_char":",",
+    "result_column_separator_byte":9,
+   "tables":[
+     {
+       "table_name":"xx_ap_invoices",
+       "path_to_data2":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ap_invoices/CCL",
+       "path_to_data":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ap_invoices",
+       "path_to_header":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/00_headers/xx_ap_invoices"
+     },
+     {
+       "table_name":"xx_ic_invoice_reconciliation",
+       "path_to_data":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ic_invoice_reconciliation/IBS",
+       "path_to_header":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/00_headers/xx_ic_invoice_reconciliation"
+     }
+   ]
+
+}
