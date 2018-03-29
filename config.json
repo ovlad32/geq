@@ -6,8 +6,8 @@
    "tables":[
      {
        "table_name":"xx_ap_invoices",
-       "path_to_data2":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ap_invoices/CCL",
-       "path_to_data":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ap_invoices",
+       "path_to_data":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ap_invoices/CCL",
+       "path_to_data2":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/xx_ap_invoices",
        "path_to_header":"C:/Users/vladymyr.orlovskiy/Documents/GE/data/00_headers/xx_ap_invoices"
      },
      {
