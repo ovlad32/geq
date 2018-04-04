@@ -1,0 +1,115 @@
+[
+  {
+    "matchedRow": 1000,
+    "joins": [
+      {
+        "value": "3132856",
+        "leftTable": "xx_gl_je_lines",
+        "leftColumn": "gl_sl_link_id",
+        "leftColumnFusionPosition": 1,
+        "leftColumnFusionSize": 1,
+        "rightColumns": [
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "attribute4",
+            "rightColumnFusionPosition": 2,
+            "rightColumnFusionSize": 6
+          },
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "voucher_number",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          }
+        ]
+      },
+      {
+        "value": "1",
+        "leftTable": "xx_gl_je_lines",
+        "leftColumn": "period_quarter_num",
+        "leftColumnFusionPosition": 1,
+        "leftColumnFusionSize": 1,
+        "rightColumns": [
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "usd_exchange_rate_text",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          }
+        ]
+      },
+      {
+        "value": "1",
+        "leftTable": "xx_gl_je_lines",
+        "leftColumn": "reference_8",
+        "leftColumnFusionPosition": 1,
+        "leftColumnFusionSize": 1,
+        "rightColumns": [
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "usd_exchange_rate_text",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          }
+        ]
+      },
+      {
+        "value": "1.0",
+        "leftTable": "xx_gl_je_lines",
+        "leftColumn": "usd_exchange_rate",
+        "leftColumnFusionPosition": 1,
+        "leftColumnFusionSize": 1,
+        "rightColumns": [
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "usd_exchange_rate",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          },
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "payment_cross_rate",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          }
+        ]
+      },
+      {
+        "value": "0",
+        "leftTable": "xx_gl_je_lines",
+        "leftColumn": "del_flag",
+        "leftColumnFusionPosition": 1,
+        "leftColumnFusionSize": 1,
+        "rightColumns": [
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "del_flag",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          }
+        ]
+      },
+      {
+        "value": "1.0",
+        "leftTable": "xx_gl_je_lines",
+        "leftColumn": "usd_mor_exchange_rate",
+        "leftColumnFusionPosition": 1,
+        "leftColumnFusionSize": 1,
+        "rightColumns": [
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "usd_exchange_rate",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          },
+          {
+            "rightTable": "xx_ap_invoices",
+            "rightColumn": "payment_cross_rate",
+            "rightColumnFusionPosition": 1,
+            "rightColumnFusionSize": 1
+          }
+        ]
+      }
+    ]
+  }
+]

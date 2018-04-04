@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"strconv"
 )
 
 var pleft = flag.String("l", "", "")
@@ -30,12 +31,12 @@ func main() {
 
 
 	if *pfin == "" {
-		panic("Provide resultant json filename! -i=file.json")
+		panic("Provide json directory name! -i=pathToJsonFileDirectory")
 	}
 	if *pfout == "" {
 		panic("Provide output directory name! -o=out")
 	}
-	matchedRows,err := readJoinFile(*pfin)
+	matchedRows,err := readJoinFiles(*pfin)
 	if err != nil {
 		err = errors.Wrapf(err, "could not read input")
 		panic(err)
@@ -114,13 +115,19 @@ func main() {
 		fcolsize int
 		val []byte
 		found bool
+		jsonFileName string
+		matchedRow string
 	}
 
 
 
 	//pValuesBytes := bytes.Split([]byte(*pvalues), []byte(*psep))
-	leftTable.readHeader([]byte(conf.HeaderColumnSeparatorChar))
-	rightTable.readHeader([]byte(conf.HeaderColumnSeparatorChar))
+	if leftTable != nil {
+		leftTable.readHeader([]byte(conf.HeaderColumnSeparatorChar))
+	}
+	if rightTable != nil {
+		rightTable.readHeader([]byte(conf.HeaderColumnSeparatorChar))
+	}
 
 	leftRows := make([][]*tcolval,0,len(matchedRows))
 	rightRows := make([][]*tcolval,0,len(matchedRows))
@@ -129,8 +136,10 @@ func main() {
 		rightColumns := make([]*tcolval, 0, 400)
 		rightMap := make(map[string]*tcolval)
 		for _, jl := range (row.Joins) {
-			tc := &tcolval{
+			tcl := &tcolval{
 				val: []byte(jl.Value),
+				matchedRow:strconv.Itoa(row.MatchedRow),
+				jsonFileName:row.fileName,
 			}
 			if jl.LeftSize <= 0 {
 				fmt.Sprintf("Left Fusion Column Size is '%v'<=0 at %v.%v",
@@ -144,10 +153,10 @@ func main() {
 				cfound := false
 				for pos0, hb := range leftTable.headers {
 					if jl.LeftColumn == strings.TrimSpace(string(hb)) {
-						tc.ref = jl
-						tc.colpos = pos0
-						tc.fcolsize = jl.LeftSize
-						tc.fcolpos = jl.LeftPosition
+						tcl.ref = jl
+						tcl.colpos = pos0
+						tcl.fcolsize = jl.LeftSize
+						tcl.fcolpos = jl.LeftPosition
 						cfound = true
 					}
 				}
@@ -156,7 +165,7 @@ func main() {
 						jl.LeftTable, jl.LeftColumn, leftTable.TableName,
 					))
 				}
-				leftColumns = append(leftColumns, tc)
+				leftColumns = append(leftColumns, tcl)
 			}
 			if rightTable != nil {
 				for _, jr := range jl.RightColumns {
@@ -175,18 +184,20 @@ func main() {
 					}
 
 					if _, rfound := rightMap[rname]; !rfound {
-						tc := &tcolval{
+						tcr := &tcolval{
 							val: []byte(jl.Value),
+							matchedRow:strconv.Itoa(row.MatchedRow),
+							jsonFileName:row.fileName,
 						}
 						cfound := false
 
 						for pos0, hb := range rightTable.headers {
 							// fmt.Println(string(hb))
 							if jr.RightColumn == strings.TrimSpace(string(hb)) {
-								tc.ref = jl
-								tc.colpos = pos0
-								tc.fcolsize = jr.RightSize
-								tc.fcolpos = jr.RightPosition
+								tcr.ref = jl
+								tcr.colpos = pos0
+								tcr.fcolsize = jr.RightSize
+								tcr.fcolpos = jr.RightPosition
 								cfound = true
 							}
 						}
@@ -195,16 +206,16 @@ func main() {
 								jr.RightTable, jr.RightColumn, rightTable.TableName,
 							))
 						}
-						rightMap[rname] = tc
+						rightMap[rname] = tcr
 					}
 				}
 			}
-			for _, tc := range rightMap {
-				rightColumns = append(rightColumns, tc)
+			for _, tcr := range rightMap {
+				rightColumns = append(rightColumns, tcr)
 			}
 		}
 		leftRows = append(leftRows,leftColumns)
-		rightRows = append(rightRows,leftColumns)
+		rightRows = append(rightRows,rightColumns)
 	}
 
 	dmp, err := dump.NewDumper(dc)
@@ -215,8 +226,9 @@ func main() {
 
 
 
-	check := func (t *TableMap, rows [][]*tcolval,fileSuffix string) {
 
+	check := func (t *TableMap, rows [][]*tcolval,fileSuffix string) {
+		dumpFile :=""
 		var proc dump.RowProcessingFuncType = func(
 			cancelContext context.Context,
 			config *dump.DumperConfigType,
@@ -226,9 +238,9 @@ func main() {
 			rawLineBytes []byte,
 		) (err error) {
 			for _, cols := range rows {
-				allValuesFound := true
+				var found bool
 				for _, jc := range cols {
-					valFound := false
+					found = false
 					if len(cellsBytes) <= jc.colpos {
 						panic(
 							fmt.Sprintf(
@@ -242,25 +254,22 @@ func main() {
 						strippedCellBytes := cellBytes[1 : len(cellBytes)-1]
 						if jc.fcolsize == 1 {
 							if bytes.Compare(strippedCellBytes, jc.val) == 0 {
-								valFound = true
+								found = true
 							}
 						} else {
-							fcellsBytes := bytes.Split(strippedCellBytes, []byte{byte(dcs)})
-							if len(fcellsBytes) == jc.fcolsize {
+							fcellsBytes := bytes.Split(strippedCellBytes, []byte(conf.FusionSeparatorChar))
+							if len(fcellsBytes) == jc.fcolsize + conf.FusionColumnSizeAlignment {
 								if bytes.Compare(fcellsBytes[jc.fcolpos - 1], jc.val) == 0 {
-									valFound = true
-									// break cellBreak
+									found = true
 								}
 							}
 						}
 					}
-					allValuesFound = allValuesFound && valFound
-					if !allValuesFound {
+					if !found {
 						break
 					}
 				}
-				if allValuesFound {
-					//fmt.Println("allValuesFound")
+				if found {
 					for _, v := range cols {
 						v.found = true
 					}
@@ -281,7 +290,11 @@ func main() {
 						}
 
 						_, err = t.writer.Write(
-							bytes.Join([][]byte{[]byte("Line#"),
+							bytes.Join([][]byte{
+								[]byte("\"IOTahoe_file_name\""),
+								[]byte("\"IOTahoe_file_line\""),
+								[]byte("\"GE_source_file_name\""),
+								[]byte("\"GE_source_file_line\""),
 								bytes.Replace(
 									t.allHeaderBytes,
 									[]byte(conf.HeaderColumnSeparatorChar),
@@ -295,7 +308,10 @@ func main() {
 						}
 					}
 					line := bytes.Join([][]byte{
-						[]byte(fmt.Sprintf("%v", currentLineNumber)),
+						[]byte("\""+cols[0].jsonFileName+"\""),
+						[]byte("\""+cols[0].matchedRow+"\""),
+						[]byte("\""+dumpFile+"\""),
+						[]byte(fmt.Sprintf("\"%v\"", currentLineNumber)),
 						bytes.Replace(
 							rawLineBytes,
 							[]byte{byte(conf.DataColumnSeparatorByte)},
@@ -318,6 +334,7 @@ func main() {
 
 		for _, filePath := range allFiles(t.PathToData,".gz") {
 			log.Printf("%v...", filePath)
+			_,dumpFile = split(filePath)
 			_, err = dmp.ReadFromFile(
 				context.Background(),
 				filePath,
@@ -355,17 +372,21 @@ func main() {
 		}
 	}
 	var wg sync.WaitGroup
+
+
+
+	_,inFile :=split(*pfin)
 	if leftTable!= nil {
 		wg.Add(1)
 		go func(){
-			check(leftTable,leftRows,".left."+(*pfin)+".tsv")
+			check(leftTable,leftRows,".left."+inFile +".tsv")
 			wg.Done()
 		}()
 	}
 	if rightTable!= nil {
 		wg.Add(1)
 		go func(){
-			check(rightTable,rightRows,".right."+(*pfin)+".tsv")
+			check(rightTable,rightRows,".right."+inFile +".tsv")
 			wg.Done()
 		}()
 	}
@@ -408,26 +429,59 @@ func readConfig() (result *TableMaps, err error) {
 }
 
 
-func readJoinFile(pfin string) (result []*MatchResult, err error) {
-
-	conf, err := os.Open(pfin)
-	if err != nil {
-		err = errors.Wrapf(err, "Opening input file %v", pfin)
-		return nil, err
+func readJoinFiles(pfin string) (result []*MatchResult, err error) {
+	s,err := os.Stat(pfin)
+	if err!= nil {
+		panic(err)
 	}
-
-	jd := json.NewDecoder(conf)
-	//result = make(MatchResultSlice,0,1)
-	result = make([]*MatchResult,0,1)
-	err = jd.Decode(&result)
-	if err != nil {
-		err = errors.Wrapf(err, "Decoding input file %v", pfin)
-		return nil, err
+	var files = make([]string,0,0)
+	if s.IsDir() {
+		files = allFiles(pfin,".json")
+	} else {
+		ext := path.Ext(strings.ToLower(pfin))
+		if ext == ".json" {
+			files = make([]string,0,0)
+			files = append(files, pfin)
+		}
 	}
+	if len(files) ==0 {
+		panic("resultant json files not found")
+	}
+	fmt.Printf("Files to process:\n")
 
+	result = make([]*MatchResult, 0, len(files)*1000)
+	for _, pathToJsonFile := range files {
+		_,fileName :=split(pathToJsonFile)
+		conf, err := os.Open(pathToJsonFile)
+		if err != nil {
+			err = errors.Wrapf(err, "Opening input file %v", pathToJsonFile )
+			return nil, err
+		}
+
+		jd := json.NewDecoder(conf)
+		rows := make([]*MatchResult, 0, 1)
+		err = jd.Decode(&rows)
+		if err != nil {
+			err = errors.Wrapf(err, "Decoding input file %v", pathToJsonFile )
+			return nil, err
+		}
+		for _,r := range rows {
+			r.fileName = fileName
+		}
+		conf.Close()
+		result = append(result,rows...)
+		fmt.Printf("%v\n",pathToJsonFile)
+	}
 	return result, nil
 }
 
+func split (path string) (dir, file string) {
+	i := strings.LastIndex(path, "\\")
+	if i == -1 {
+		i = strings.LastIndex(path, "/")
+	}
+	return path[:i+1], path[i+1:]
+}
 func allFiles(p, pext string) (result []string) {
 	result = make([]string, 0, 10)
 	all := list.New()
@@ -479,11 +533,13 @@ type TableMaps struct {
 	DataColumnSeparatorByte   int         `json:"data_column_separator_byte"`
 	FusionSeparatorChar       string      `json:"fusion_separator_char"`
 	HeaderColumnSeparatorChar string      `json:"header_column_separator_char"`
-	ResultColumnSeparatorByte int         `json:"header_column_separator_byte"`
+	ResultColumnSeparatorByte int         `json:"result_column_separator_byte"`
+	FusionColumnSizeAlignment int         `json:"fusion_column_size_alignment"`
 }
 type MatchResultSlice  *[]MatchResult
 type MatchResult struct {
-	MatchedRowId int `json:"matchedRowId"`
+	MatchedRow int `json:"matchedRow"`
+	fileName string
 	Joins []*MatchedJoin
 }
 type MatchedJoin struct {
