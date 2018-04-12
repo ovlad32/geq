@@ -84,7 +84,7 @@ type RowProcessingFuncType func(
 	config *DumperConfigType,
 	currentLineNumber uint64,
 	currentStreamPosition uint64,
-	cellBytes [][]byte,
+	cellsBytes [][]byte,
 	rawLineBytes []byte,
   ) (err error)
 
