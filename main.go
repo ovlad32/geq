@@ -1,36 +1,34 @@
 package main
 
 import (
-	"flag"
-	"container/list"
-	"strings"
-	"io/ioutil"
-	"github.com/pkg/errors"
-	"path"
-	"os"
-	"path/filepath"
-	"encoding/json"
-	"io"
 	"bytes"
-	"fmt"
-	"github.com/ovlad32/geq/dump"
-	"log"
+	"container/list"
 	"context"
-)
+	"encoding/json"
+	"flag"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 
+	"github.com/ovlad32/geq/dump"
+	"github.com/pkg/errors"
+)
 
 var pfout = flag.String("o", "", "")
 var pfin = flag.String("i", "", "")
 var cmd = flag.String("c", "", "")
-var et = flag.String("et", "", "")
-var ec = flag.String("ec", "", "")
+var tableToExtract = flag.String("et", "", "")
+var columnToExtract = flag.String("ec", "", "")
 var efcs = flag.Int("efcs", 1, "")
 var efcp = flag.Int("efcp", 1, "")
 
-
 func main() {
 	flag.Parse()
-
 
 	if *pfout == "" {
 		panic("Provide output directory name! -o=out")
@@ -47,41 +45,37 @@ func main() {
 		panic(err)
 	}
 
-
-
 	var table *TableMap = nil
 
-	if *et == "" {
-		panic("specify table name")
+	if *tableToExtract == "" {
+		panic("specify table name to extract data")
+	}
+	if *columnToExtract == "" {
+		panic("specify column name to extract datas")
 	}
 
 	for _, tb := range conf.Tables {
-		if strings.ToLower(tb.TableName) == strings.ToLower(*et) {
+		if strings.ToLower(tb.TableName) == strings.ToLower(*tableToExtract) {
 			table = tb
 			break
 		}
 	}
 	if table == nil {
-		panic(fmt.Sprintf("table %v not found in config file",*et))
+		panic(fmt.Sprintf("table %v not found in config file", *tableToExtract))
 	}
 
 	table.readHeader([]byte(conf.HeaderColumnSeparatorChar))
 
-	if *ec == "" {
-		panic("specify column name")
-	}
-	colpos := -1;
-	for index ,hb := range table.headers {
+	colpos := -1
+	for index, hb := range table.headers {
 		if strings.ToLower(strings.TrimSpace(string(hb))) ==
-			strings.ToLower(strings.TrimSpace(*ec)) {
-				colpos  = index
+			strings.ToLower(strings.TrimSpace(*columnToExtract)) {
+			colpos = index
 		}
 	}
 	if colpos == -1 {
-		panic(fmt.Sprintf("column name %v not found in %v ",*ec,table.TableName))
+		panic(fmt.Sprintf("column name %v not found in %v ", *columnToExtract, table.TableName))
 	}
-
-
 
 	dcs := byte(conf.DataColumnSeparatorByte)
 
@@ -92,7 +86,6 @@ func main() {
 		BufferSize:      4096,
 	}
 
-
 	dmp, err := dump.NewDumper(dc)
 	if err != nil {
 		err = errors.Wrapf(err, "could not create dumper")
@@ -100,12 +93,12 @@ func main() {
 	}
 
 	var proc4Extract dump.RowProcessingFuncType = func(
-					cancelContext context.Context,
-					config *dump.DumperConfigType,
-					currentLineNumber uint64,
-					currentStreamPosition uint64,
-					cellsBytes [][]byte,
-					rawLineBytes []byte,
+		cancelContext context.Context,
+		config *dump.DumperConfigType,
+		currentLineNumber uint64,
+		currentStreamPosition uint64,
+		cellsBytes [][]byte,
+		rawLineBytes []byte,
 	) (err error) {
 		if len(cellsBytes) < colpos {
 			return
@@ -121,7 +114,7 @@ func main() {
 			if len(fcellsBytes) < *efcp {
 				return
 			}
-			ref = &fcellsBytes[*efcp - 1]
+			ref = &fcellsBytes[*efcp-1]
 		}
 		if ref == nil || len(*ref) == 0 {
 			return
@@ -140,7 +133,7 @@ func main() {
 					*efcp,
 					*efcs,
 				))
-				table.writer,err = os.Create(s)
+				table.writer, err = os.Create(s)
 				if err != nil {
 					panic(err)
 				}
@@ -156,7 +149,6 @@ func main() {
 	}
 
 	for _, filePath := range allFiles(table.PathToData, ".gz") {
-
 
 		log.Printf("%v...", filePath)
 		_, err = dmp.ReadFromFile(
@@ -174,11 +166,7 @@ func main() {
 		table.writer.Close()
 	}
 
-
 }
-
-
-
 
 func split(path string) (dir, file string) {
 	i := strings.LastIndex(path, "\\")
@@ -219,9 +207,6 @@ func allFiles(p, pext string) (result []string) {
 	return
 }
 
-
-
-
 type TableMap struct {
 	TableName      string `json:"table_name"`
 	PathToHeader   string `json:"path_to_header"`
@@ -243,8 +228,6 @@ type TableMaps struct {
 	ResultColumnSeparatorByte int         `json:"result_column_separator_byte"`
 	FusionColumnSizeAlignment int         `json:"fusion_column_size_alignment"`
 }
-
-
 
 func readConfig() (result *TableMaps, err error) {
 	ex, err := os.Executable()

@@ -2,24 +2,23 @@ package main
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	"github.com/ovlad32/geq/dump"
-	"strings"
+	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
-	"strconv"
 	"os"
 	"path"
-	"encoding/json"
+	"strconv"
+	"strings"
 	"sync"
-	"context"
-	"flag"
+
+	"github.com/ovlad32/geq/dump"
+	"github.com/pkg/errors"
 )
 
-
-var pleft = flag.String("l", "", "")
-var pright = flag.String("r", "", "")
-
+var pleft = flag.String("lt", "", "")
+var pright = flag.String("rt", "", "")
 
 func JsonCheck() {
 	if *pfin == "" {
@@ -31,7 +30,7 @@ func JsonCheck() {
 		panic(err)
 	}
 	if len(matchedRows) == 0 {
-		err = errors.New("Match result set is empty!")
+		err = errors.New("match result set is empty")
 	}
 
 	conf, err := readConfig()
@@ -39,8 +38,6 @@ func JsonCheck() {
 		err = errors.Wrapf(err, "could not read config")
 		panic(err)
 	}
-
-
 
 	var leftTable, rightTable *TableMap
 
@@ -196,7 +193,6 @@ func JsonCheck() {
 		leftRows = append(leftRows, leftColumns)
 		rightRows = append(rightRows, rightColumns)
 	}
-
 
 	dcs := byte(conf.DataColumnSeparatorByte)
 	dc := &dump.DumperConfigType{
@@ -382,7 +378,6 @@ func JsonCheck() {
 
 }
 
-
 func readJoinFiles(pfin string) (result []*MatchResult, err error) {
 	s, err := os.Stat(pfin)
 	if err != nil {
@@ -449,5 +444,3 @@ type MatchedRightColumn struct {
 	RightPosition int    `json:"rightColumnFusionPosition"`
 	RightSize     int    `json:"rightColumnFusionSize"`
 }
-
-
