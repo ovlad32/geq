@@ -17,6 +17,7 @@ var tableToFilter = flag.String("ft", "", "")
 var columnToFilter = flag.String("fc", "", "")
 var valueToFilter = flag.String("fv", "", "")
 var valueToEmptyEmpty = flag.Bool("fvempty", false, "")
+var filterOperator = flag.String("fo", "e", "")
 
 func Filter() {
 
@@ -28,7 +29,9 @@ func Filter() {
 	if *columnToFilter == "" {
 		panic("specify column name to filter data")
 	}
-
+	if *filterOperator == "" {
+		panic("specify filter operator: e=equal,p=prefix,s=suffix,i=inclusion")
+	}
 	if !*valueToEmptyEmpty && *columnToFilter == "" {
 		panic("specify value to filter data")
 	}
@@ -105,9 +108,28 @@ func Filter() {
 		if (ref == nil || len(*ref) == 0) && !*valueToEmptyEmpty {
 			return
 		}
-		if string(*ref) != *valueToFilter {
-			return
+		sref := string(*ref)
+		switch *filterOperator {
+		case "e":
+			if sref != *valueToFilter {
+				return
+			}
+		case "p":
+			if !strings.HasPrefix(sref, *valueToFilter) {
+				return
+			}
+		case "s":
+			if !strings.HasSuffix(sref, *valueToFilter) {
+				return
+			}
+		case "i":
+			if !strings.Contains(sref, *valueToFilter) {
+				return
+			}
+		default:
+			panic(fmt.Sprintf("filter operator value, -fo option, (%v) is not recognized", *filterOperator))
 		}
+
 		if table.writer == nil {
 			if *pfout == "" {
 				table.writer = os.Stdout
