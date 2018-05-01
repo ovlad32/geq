@@ -14,3 +14,4 @@ BINDATA/
 gopath.cmd
 *.out
 nodeId*
+!add.cmd

@@ -2,6 +2,7 @@ package dump
 
 import (
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"errors"
@@ -9,14 +10,12 @@ import (
 	"io"
 	"os"
 	"strings"
-	"bytes"
 )
 
-
-//\n   U+000A line feed or newline
+//LineFeedByte \n   U+000A line feed or newline
 const LineFeedByte = byte('\n')
 
-//\r   U+000D carriage return
+//CarriageReturnByte \r   U+000D carriage return
 const CarriageReturnByte = byte('\r')
 
 func TruncateFromCRLF(line []byte) []byte {
@@ -86,7 +85,7 @@ type RowProcessingFuncType func(
 	currentStreamPosition uint64,
 	cellsBytes [][]byte,
 	rawLineBytes []byte,
-  ) (err error)
+) (err error)
 
 var (
 	x0D                             = []byte{0x0D}
@@ -243,7 +242,7 @@ func (dumper *DumperType) ReadFromStream(
 			}
 		}
 	}
-	return
+
 }
 
 func (dumper *DumperType) ReadFromFile(
