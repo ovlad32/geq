@@ -29,7 +29,7 @@ func Filter() {
 		panic("specify column name to filter data")
 	}
 
-	if !*valueToEmptyEmpty || *columnToFilter == "" {
+	if !*valueToEmptyEmpty && *columnToFilter == "" {
 		panic("specify value to filter data")
 	}
 
