@@ -126,12 +126,12 @@ func Filter() {
 				}
 			}
 		}
-		_, err = table.writer.Write(*ref)
+		_, err = table.writer.Write(rawLineBytes)
 
 		if err != nil {
 			panic(err)
 		}
-		_, err = table.writer.Write([]byte("\n"))
+		//_, err = table.writer.Write([]byte("\n"))
 		return
 	}
 
