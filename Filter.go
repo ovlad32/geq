@@ -40,13 +40,13 @@ func Filter() {
 	}
 
 	for _, tb := range conf.Tables {
-		if strings.ToLower(tb.TableName) == strings.ToLower(*tableToExtract) {
+		if strings.ToLower(tb.TableName) == strings.ToLower(*tableToFilter) {
 			table = tb
 			break
 		}
 	}
 	if table == nil {
-		panic(fmt.Sprintf("table %v not found in config file", *tableToExtract))
+		panic(fmt.Sprintf("table %v not found in config file", *tableToFilter))
 	}
 
 	table.readHeader([]byte(conf.HeaderColumnSeparatorChar))
