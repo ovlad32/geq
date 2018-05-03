@@ -72,6 +72,7 @@ func Extract() {
 		err = errors.Wrapf(err, "could not create dumper")
 		panic(err)
 	}
+	var cache := make(map[string] bool)
 
 	var proc4Extract dump.RowProcessingFuncType = func(
 		cancelContext context.Context,
@@ -97,8 +98,17 @@ func Extract() {
 			}
 			ref = &fcellsBytes[*efcp-1]
 		}
+	
 		if ref == nil || len(*ref) == 0 {
 			return
+		}
+		if (*extractCount) > 0 {
+			sref := string(*ref)
+			if _,found := cache[sref]; found{
+				return
+			} else {
+				cache[sref] = true
+			}
 		}
 		if table.writer == nil {
 			if *pfout == "" {
@@ -126,6 +136,10 @@ func Extract() {
 			panic(err)
 		}
 		_, err = table.writer.Write([]byte("\n"))
+		if (*extractCount) > 0 && len(cache) == *extractCount {
+			table.writer.Close();
+			os.Exit(0)
+		}
 		return
 	}
 
