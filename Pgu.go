@@ -94,7 +94,7 @@ func Pgu() {
 			cb = cb[1 : len(cb)-1]
 
 			columns = append(columns, headers[index])
-			placeholders = append(placeholders, fmt.Sprintf(":v%v", index))
+			placeholders = append(placeholders, fmt.Sprintf("$%v", index))
 			values = append(values, string(cb))
 		}
 		if len(columns) > 0 {
@@ -106,7 +106,7 @@ func Pgu() {
 			)
 			stmt, err := tx.Prepare(dml)
 			if err != nil {
-				log.Fatal(err.Error() + ":" + dml)
+				log.Fatal(err.Error() + ": " + dml)
 			}
 			_, err = stmt.Exec(values...)
 			if err != nil {
