@@ -33,6 +33,8 @@ func main() {
 
 	} else if *cmd == "f" {
 		Filter()
+	} else if *cmd == "u" {
+		Pgu()
 	}
 
 }
