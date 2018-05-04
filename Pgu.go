@@ -94,7 +94,7 @@ func Pgu() {
 			cb = cb[1 : len(cb)-1]
 
 			columns = append(columns, headers[index])
-			placeholders = append(placeholders, "?")
+			placeholders = append(placeholders, fmt.Sprintf(":v%v", index))
 			values = append(values, string(cb))
 		}
 		if len(columns) > 0 {
