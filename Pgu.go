@@ -120,6 +120,10 @@ func Pgu() {
 					log.Fatal(err)
 				}
 				txCount = 0
+				tx, err = db.BeginTx(context.Background(), nil)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 
 		}
