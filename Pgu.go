@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var conn = flag.String("conn", "user=postgres password=postgres dbname=postgres host=localhost port=5432 timeout=10 sslmode=disable", "")
+var conn = flag.String("conn", "user=postgres password=postgres dbname=postgres host=localhost port=5432 sslmode=disable", "")
 
 var targetTable = flag.String("targetTable", "", "")
 var sourceTable = flag.String("sourceTable", "", "")
