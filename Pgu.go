@@ -71,6 +71,7 @@ func Pgu() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	txCount := 0
 	var proc4Extract dump.RowProcessingFuncType = func(
 		cancelContext context.Context,
 		config *dump.DumperConfigType,
@@ -111,6 +112,13 @@ func Pgu() {
 			_, err = stmt.Exec(values...)
 			if err != nil {
 				log.Fatal(err)
+			}
+			err = tx.Commit()
+			if txCount > 1000 {
+				if err != nil {
+					log.Fatal(err)
+				}
+				txCount = 0
 			}
 
 		}
