@@ -106,7 +106,7 @@ func Pgu() {
 			)
 			stmt, err := tx.Prepare(dml)
 			if err != nil {
-				log.Fatal(err.Error() + " dml")
+				log.Fatal(err.Error() + ":" + dml)
 			}
 			_, err = stmt.Exec(values...)
 			if err != nil {
