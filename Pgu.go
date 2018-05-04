@@ -113,8 +113,9 @@ func Pgu() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			err = tx.Commit()
-			if txCount > 1000 {
+			txCount++
+			if txCount >= 1000 {
+				err = tx.Commit()
 				if err != nil {
 					log.Fatal(err)
 				}
