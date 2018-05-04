@@ -16,6 +16,7 @@ import (
 
 var tableToExtract = flag.String("et", "", "")
 var columnToExtract = flag.String("ec", "", "")
+var extractCount = flag.Int("evc", 10, "")
 var efcs = flag.Int("efcs", 1, "")
 var efcp = flag.Int("efcp", 1, "")
 
@@ -72,7 +73,7 @@ func Extract() {
 		err = errors.Wrapf(err, "could not create dumper")
 		panic(err)
 	}
-	var cache := make(map[string] bool)
+	var cache map[string]bool = make(map[string]bool)
 
 	var proc4Extract dump.RowProcessingFuncType = func(
 		cancelContext context.Context,
@@ -86,6 +87,9 @@ func Extract() {
 			return
 		}
 		cellBytes := cellsBytes[colpos]
+		if len(cellBytes) == 0 {
+			return
+		}
 
 		strippedCellBytes := cellBytes[1 : len(cellBytes)-1]
 		var ref *[]byte = nil
@@ -98,13 +102,13 @@ func Extract() {
 			}
 			ref = &fcellsBytes[*efcp-1]
 		}
-	
+
 		if ref == nil || len(*ref) == 0 {
 			return
 		}
 		if (*extractCount) > 0 {
 			sref := string(*ref)
-			if _,found := cache[sref]; found{
+			if _, found := cache[sref]; found {
 				return
 			} else {
 				cache[sref] = true
@@ -137,7 +141,7 @@ func Extract() {
 		}
 		_, err = table.writer.Write([]byte("\n"))
 		if (*extractCount) > 0 && len(cache) == *extractCount {
-			table.writer.Close();
+			table.writer.Close()
 			os.Exit(0)
 		}
 		return

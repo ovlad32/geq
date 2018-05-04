@@ -92,7 +92,9 @@ func Filter() {
 			return
 		}
 		cellBytes := cellsBytes[colpos]
-
+		if len(cellBytes) == 0 {
+			return
+		}
 		strippedCellBytes := cellBytes[1 : len(cellBytes)-1]
 		var ref *[]byte = &strippedCellBytes
 		/*if *efcs == 1 {
