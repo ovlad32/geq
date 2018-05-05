@@ -84,6 +84,7 @@ func Pgu() {
 		columns := make([]string, 0, len(headers))
 		placeholders := make([]string, 0, len(headers))
 		values := make([]interface{}, 0, len(headers))
+		param := 0
 
 		for index, cb := range cellsBytes {
 			if len(cb) < 2 {
@@ -93,15 +94,9 @@ func Pgu() {
 				continue
 			}
 			cb = cb[1 : len(cb)-1]
-
+			param++
 			columns = append(columns, headers[index])
-			if headers[index] == "invoice_id" {
-				placeholders = append(placeholders, fmt.Sprintf("$%v", index+1))
-
-			} else {
-				placeholders = append(placeholders, fmt.Sprintf("$%v::text", index+1))
-
-			}
+			placeholders = append(placeholders, fmt.Sprintf("$%v", param))
 			values = append(values, string(cb))
 		}
 		if len(columns) > 0 {
