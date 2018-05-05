@@ -95,7 +95,7 @@ func Pgu() {
 			cb = cb[1 : len(cb)-1]
 
 			columns = append(columns, headers[index])
-			placeholders = append(placeholders, fmt.Sprintf("$%v", index+1))
+			placeholders = append(placeholders, fmt.Sprintf("$%v::text", index+1))
 			values = append(values, string(cb))
 		}
 		if len(columns) > 0 {
