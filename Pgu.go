@@ -116,7 +116,7 @@ func Pgu() {
 					}
 				}
 			}
-			if stmt != nil {
+			if stmt == nil {
 				dml := fmt.Sprintf(
 					"insert into %v(%v) values(%v)",
 					*targetTable,
