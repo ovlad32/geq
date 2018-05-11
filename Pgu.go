@@ -67,11 +67,14 @@ func Pgu() {
 	for index := range table.headers {
 		headers[index] = string(table.headers[index])
 	}
+
 	tx, err := db.BeginTx(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	txCount := 0
+	var prevColumns = make(map[string]bool)
+	var prevStmt *sql.Stmt
 	var proc4Extract dump.RowProcessingFuncType = func(
 		cancelContext context.Context,
 		config *dump.DumperConfigType,
@@ -99,16 +102,31 @@ func Pgu() {
 			placeholders = append(placeholders, fmt.Sprintf("$%v", param))
 			values = append(values, string(cb))
 		}
+
 		if len(columns) > 0 {
-			dml := fmt.Sprintf(
-				"insert into %v(%v) values(%v)",
-				*targetTable,
-				strings.Join(columns, ","),
-				strings.Join(placeholders, ","),
-			)
-			stmt, err := tx.Prepare(dml)
-			if err != nil {
-				log.Fatal(err.Error() + ": " + dml)
+			var stmt *sql.Stmt
+			if prevStmt != nil {
+				if len(prevColumns) == len(columns) {
+					stmt = prevStmt
+					for _, c := range columns {
+						if _, found := prevColumns[c]; !found {
+							stmt = nil
+							break
+						}
+					}
+				}
+			}
+			if stmt != nil {
+				dml := fmt.Sprintf(
+					"insert into %v(%v) values(%v)",
+					*targetTable,
+					strings.Join(columns, ","),
+					strings.Join(placeholders, ","),
+				)
+				stmt, err = tx.Prepare(dml)
+				if err != nil {
+					log.Fatal(err.Error() + ": " + dml)
+				}
 			}
 			_, err = stmt.Exec(values...)
 			if err != nil {
@@ -125,6 +143,7 @@ func Pgu() {
 				if err != nil {
 					log.Fatal(err)
 				}
+				prevStmt = nil
 			}
 
 		}
