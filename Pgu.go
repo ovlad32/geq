@@ -80,16 +80,15 @@ func Pgu() {
 	rowCount := 0
 
 	newTx := func() {
-		if tx == nil {
-			tx, err = db.BeginTx(context.Background(), nil)
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
+		if tx != nil {
 			err = tx.Commit()
 			if err != nil {
 				log.Fatal(err)
 			}
+		}
+		tx, err = db.BeginTx(context.Background(), nil)
+		if err != nil {
+			log.Fatal(err)
 		}
 		rowCount = 0
 		dml := fmt.Sprintf(
