@@ -73,7 +73,7 @@ func Pgu() {
 		v := sql.NullString{Valid: true}
 		values = append(values, &v)
 		valueRefs[index] = &v
-		placeholders[index] = fmt.Sprintf("$%v", index)
+		placeholders[index] = fmt.Sprintf("$%v", index+1)
 	}
 	var tx *sql.Tx
 	var stmt *sql.Stmt
