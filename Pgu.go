@@ -64,17 +64,48 @@ func Pgu() {
 		panic(err)
 	}
 	headers := make([]string, len(table.headers))
+	placeholders := make([]string, len(table.headers))
+	values := make([]*sql.NullString, 0, len(table.headers))
+	valueRefs := make([]interface{}, len(table.headers))
+
 	for index := range table.headers {
 		headers[index] = string(table.headers[index])
+		v := sql.NullString{Valid: true}
+		values = append(values, &v)
+		valueRefs[index] = &v
+		placeholders[index] = fmt.Sprintf("$%v", index)
 	}
-
-	tx, err := db.BeginTx(context.Background(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var tx *sql.Tx
+	var stmt *sql.Stmt
 	txCount := 0
-	var prevColumns = make(map[string]bool)
-	var prevStmt *sql.Stmt
+
+	newTx := func() {
+		if tx == nil {
+			tx, err = db.BeginTx(context.Background(), nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+			txCount = 0
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		dml := fmt.Sprintf(
+			"insert into %v(%v) values(%v)",
+			*targetTable,
+			strings.Join(headers, ","),
+			strings.Join(placeholders, ","),
+		)
+		stmt, err = tx.Prepare(dml)
+		if err != nil {
+			log.Fatal(err.Error() + ": " + dml)
+		}
+
+	}
+	newTx()
+
 	var proc4Extract dump.RowProcessingFuncType = func(
 		cancelContext context.Context,
 		config *dump.DumperConfigType,
@@ -83,70 +114,31 @@ func Pgu() {
 		cellsBytes [][]byte,
 		rawLineBytes []byte,
 	) (err error) {
-
-		columns := make([]string, 0, len(headers))
-		placeholders := make([]string, 0, len(headers))
-		values := make([]interface{}, 0, len(headers))
-		param := 0
-
-		for index, cb := range cellsBytes {
+		maxIndex := len(cellsBytes) - 1
+		for index := range headers {
+			values[index].String = ""
+			if index > maxIndex {
+				continue
+			}
+			cb := cellsBytes[index]
 			if len(cb) < 2 {
 				continue
 			}
-			if index >= len(headers) {
-				continue
-			}
-			cb = cb[1 : len(cb)-1]
-			param++
-			columns = append(columns, headers[index])
-			placeholders = append(placeholders, fmt.Sprintf("$%v", param))
-			values = append(values, string(cb))
+			values[index].String = strings.TrimSpace(string(cb[1 : len(cb)-1]))
 		}
-
-		if len(columns) > 0 {
-			var stmt *sql.Stmt
-			if prevStmt != nil {
-				if len(prevColumns) == len(columns) {
-					stmt = prevStmt
-					for _, c := range columns {
-						if _, found := prevColumns[c]; !found {
-							stmt = nil
-							break
-						}
-					}
-				}
-			}
-			if stmt == nil {
-				dml := fmt.Sprintf(
-					"insert into %v(%v) values(%v)",
-					*targetTable,
-					strings.Join(columns, ","),
-					strings.Join(placeholders, ","),
-				)
-				stmt, err = tx.Prepare(dml)
-				if err != nil {
-					log.Fatal(err.Error() + ": " + dml)
-				}
-			}
-			_, err = stmt.Exec(values...)
+		_, err = stmt.Exec(valueRefs...)
+		if err != nil {
+			log.Fatal(err)
+		}
+		txCount++
+		if txCount >= 1000 {
+			err = tx.Commit()
 			if err != nil {
 				log.Fatal(err)
 			}
-			txCount++
-			if txCount >= 1000 {
-				err = tx.Commit()
-				if err != nil {
-					log.Fatal(err)
-				}
-				txCount = 0
-				tx, err = db.BeginTx(context.Background(), nil)
-				if err != nil {
-					log.Fatal(err)
-				}
-				prevStmt = nil
-			}
-
+			newTx()
 		}
+
 		return
 	}
 
