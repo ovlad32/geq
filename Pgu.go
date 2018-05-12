@@ -77,7 +77,7 @@ func Pgu() {
 	}
 	var tx *sql.Tx
 	var stmt *sql.Stmt
-	txCount := 0
+	rowCount := 0
 
 	newTx := func() {
 		if tx == nil {
@@ -85,7 +85,7 @@ func Pgu() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			txCount = 0
+			rowCount = 0
 		} else {
 			err = tx.Commit()
 			if err != nil {
@@ -131,12 +131,8 @@ func Pgu() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		txCount++
-		if txCount >= 1000 {
-			err = tx.Commit()
-			if err != nil {
-				log.Fatal(err)
-			}
+		rowCount++
+		if rowCount >= 1000 {
 			newTx()
 		}
 
