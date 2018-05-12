@@ -85,13 +85,13 @@ func Pgu() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			rowCount = 0
 		} else {
 			err = tx.Commit()
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
+		rowCount = 0
 		dml := fmt.Sprintf(
 			"insert into %v(%v) values(%v)",
 			*targetTable,
