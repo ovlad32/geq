@@ -116,12 +116,13 @@ func Pgu() {
 	) (err error) {
 		maxIndex := len(cellsBytes) - 1
 		for index := range headers {
-			values[index].String = ""
 			if index > maxIndex {
+				values[index].String = ""
 				continue
 			}
 			cb := cellsBytes[index]
 			if len(cb) < 2 {
+				values[index].String = ""
 				continue
 			}
 			values[index].String = strings.TrimSpace(string(cb[1 : len(cb)-1]))
